@@ -45,7 +45,10 @@ Once PRD is complete, generate:
 
 ### 1. Mermaid Flowchart
 
-Parse business flow and generate Mermaid diagram:
+根据 PRD 内容选择合适的流程图类型：
+
+#### 类型一：标准流程图（默认）
+适合简单业务流程，单一路径展示：
 
 ```mermaid
 flowchart TD
@@ -56,10 +59,35 @@ flowchart TD
     D --> E
 ```
 
-Include:
-- Main flow (happy path)
-- Exception branches
-- Decision points with clear labels
+#### 类型二：泳道图（跨职能流程图）
+适合多角色/多系统协作的复杂流程：
+
+```mermaid
+flowchart TB
+    subgraph 角色A["👤 角色A"]
+        A[步骤1] --> B[步骤2]
+    end
+    
+    subgraph 角色B["👤 角色B"]
+        C[步骤3] --> D{判断}
+        D -->|条件1| E[步骤4]
+        D -->|条件2| F[步骤5]
+    end
+    
+    B --> C
+    E --> G[结束]
+    F --> G
+```
+
+**选择标准**：
+- 单一角色操作 → 标准流程图
+- 多角色协作（用户/商家/系统/数据）→ 泳道图
+
+**包含要素**：
+- 主流程（happy path）
+- 异常分支
+- 判断节点（菱形，带清晰标签）
+- 各泳道内步骤按执行顺序排列
 
 ### 2. Feature List Table
 
@@ -73,9 +101,9 @@ Rules:
 - Description should include user action + system response
 - Acceptance criteria must be measurable
 
-### 3. Tracking Events Table (LZD AIDC规范 v2.0)
+### 3. Tracking Events Table (数据埋点规范)
 
-基于 LZD App端流量核心埋点规范 + 频道升级埋点梳理文档（tab7最终版）生成埋点：
+基于 App端流量核心埋点规范生成埋点：
 
 #### 事件类型编码
 | 事件类型 | 编码 | 说明 |
@@ -93,7 +121,7 @@ SPM格式：`spma.b.c.d`
 
 | 段位 | 含义 | 示例 |
 |------|------|------|
-| A段 | 站点/业务 | native: a211g0 / h5-ID: a2o4j / h5-TH: a2o4m / h5-PH: a2o4l / h5-VN: a2o4n / h5-MY: a2o4k / h5-SG: a2o42 |
+| A段 | 站点/业务 | 各国站点编码 |
 | B段 | 页面类型 | flashsale / lazsubsidy / lazflash_promotion / lazflash-brand / store_brand_sale / themeflashsale / lazflash_usersegment |
 | C段 | 页面区块 | back / more / share / cart / rule / searchbox / jfy / mvpmodule / brandmodule / ucfsmodule / 8pmmodule / usersegmentmodule |
 | D段 | 区块内点位 | tab / title / reminder / back / index数字 |
@@ -102,11 +130,15 @@ SPM格式：`spma.b.c.d`
 - 页面事件(2001)：spm-cnt(2位: spma.b), spm-url(4位), spm-pre(4位) - **必埋**
 - 曝光/点击(2201/2101)：spm(3/4位), spm-url(4位), spm-pre(4位) - **spm必埋，url/pre选埋**
 
+**spm-url vs spm-pre 区别**：
+- **spm-url**：直接来源页面（上一页）
+- **spm-pre**：间接来源页面（上上游页面），用于追溯完整用户路径
+
 #### 埋点表格格式
 
-| 埋点事件 | 事件类型 | page | arg1(logkey) | 触发时机 | 关键参数 | 优先级 |
-|---------|---------|------|-------------|---------|---------|--------|
-| {事件名} | 2001/2101/2201 | {page_name} | {arg1} | {触发时机} | {参数列表} | 必需/建议 |
+| 子模块 | 事件描述 | 事件类型 | page | arg1 | 一级key | 二级key | value | 参数含义 | 备注 |
+|--------|---------|---------|------|------|---------|---------|-------|---------|------|
+| {模块名} | {曝光/点击/页面事件} | 2001/2101/2201 | H5: url | {arg1} | {一级key} | {二级key} | {value} | {参数说明} | 必埋/选埋 |
 
 #### 事件上报路径规范 (page)
 
@@ -116,8 +148,8 @@ SPM格式：`spma.b.c.d`
 | 页面点击 | /{lp_name}.lp.click | /flashsale.lp.click |
 | 商品曝光 | /Product.Exposure.Event | - |
 | 商品点击 | /Product.Click.Event | - |
-| 搜索框曝光 | /a211g0.page_{scene}.unified-header-searchbox.exp | /a211g0.page_flashsale.unified-header-searchbox.exp |
-| 搜索框点击 | /a211g0.page_{scene}.unified-header-searchbox.clk | /a211g0.page_flashsale.unified-header-searchbox.clk |
+| 搜索框曝光 | /{spma}.page_{scene}.unified-header-searchbox.exp | /xxxxx.page_flashsale.unified-header-searchbox.exp |
+| 搜索框点击 | /{spma}.page_{scene}.unified-header-searchbox.clk | /xxxxx.page_flashsale.unified-header-searchbox.clk |
 
 #### 商品卡埋点规范（含广告）
 
@@ -159,14 +191,24 @@ SPM格式：`spma.b.c.d`
 
 | 参数 | 说明 | 示例 |
 |------|------|------|
-| spm-cnt | 当前页面标识，2位 | a211g0.flashsale |
-| spm-url | 来源页面spm | a211g0.home.jfy.1 |
-| spm-pre | 来源的来源spm | a211g0.home.banner.2 |
+| spm-cnt | 当前页面标识，2位 | spma.b |
+| spm-url | 来源页面spm（用户从哪个页面来） | spma.b.c.d |
+| spm-pre | 二级来源spm（来源页面的上游页面） | spma.b.c.d |
+
+**SPM三件套说明**：
+```
+用户行为链路：首页 → 搜索结果页 → 当前页面（频道页）
+
+当前页面埋点：
+- spm-cnt = spma.b（当前页面）
+- spm-url = spma.search.list.1（来源页面：搜索页）
+- spm-pre = spma.home.searchbox.1（二级来源：首页搜索框）
+```
 
 #### 模块级埋点 (2201/2101)
 
 **Header模块**：返回、More、分享、购物车、规则、搜索框
-**Top Module模块**：Subsidy Entry、BrandSale Entry、8PM Entry、UCFS Entry、UserSegment Entry
+**Top Module模块**：各类入口模块
 **JFY模块**：Tab区、商品区、店铺卡、主题卡
 
 #### 商卡直接加购埋点
@@ -207,7 +249,7 @@ utparam-url: 来源页面的utLogMap（json结构，需urlencode）
 
 - 商品报名频道活动类型、BU、category、Discount、Price、是否联盟CPS+商品、是否设置补贴 → **不放入流量埋点**，从商品表关联
 - 预约功能（is_reminder_set）目前服务端拿不到状态，只能前端侧埋点击状态
-- GCP后台配置data_key格式：`国家_创建日期_运营自定义名字`（如 SG_251212_LazflashOnly）
+- data_key格式：`国家_创建日期_运营自定义名字`（如 SG_251212_XxxOnly）
 - utLogMap嵌套层级需要单独url encode一次
 
 ### 4. ASCII Wireframes
@@ -273,20 +315,22 @@ flowchart TD
 | 2 | 购物车 | 一键领券 | P0 | 点击推荐卡片自动领券并应用 | 领券成功率>95% |
 | 3 | 结算 | 流程合并 | P0 | 合并地址和支付选择为一步 | 步骤从4步减到2步 |
 
-📊 数据埋点（AIDC规范 v2.0）
+📊 数据埋点
 
-| 埋点事件 | 事件类型 | page | arg1 | 触发时机 | 关键参数 | 优先级 |
-|---------|---------|------|------|---------|---------|--------|
-| 购物车页面 | 2001 | /cart.lp.exposure | spm-cnt | 进入购物车页 | spm-cnt=a211g0.cart, spm-url, spm-pre | 必需 |
-| 优惠券模块曝光 | 2201 | /cart.lp.exposure | page_cart_coupon_exp | 推荐卡片可见 | spm=a.b.c.d, _p_prod, _p_sku, trackInfo | 必需 |
-| 优惠券模块点击 | 2101 | /cart.lp.click | page_cart_coupon_clk | 点击推荐卡片 | spm, spm-url, spm-pre, result | 必需 |
-| 去结算点击 | 2101 | /cart.lp.click | page_cart_checkout_clk | 点击结算按钮 | spm, spm-url, spm-pre, item_count | 必需 |
+| 子模块 | 事件描述 | 事件类型 | page | arg1 | 一级key | 二级key | value | 参数含义 | 备注 |
+|--------|---------|---------|------|------|---------|---------|-------|---------|------|
+| 页面 | 页面事件 | 2001 | H5: url | spm-cnt | spm-cnt | / | spma.b | 当前页面spma.b，只有2位 | 必埋 |
+| | | | | | spm-url | / | url-spma.b.c.d | 来源页面spm | 必埋 |
+| | | | | | spm-pre | / | pre-spma.b.c.d | 二级来源spm | 必埋 |
+| 优惠券模块 | 曝光 | 2201 | H5: url | /cart.lp.exposure | spm | / | spma.b.c.d | 模块曝光坑位 | 必埋 |
+| 优惠券模块 | 点击 | 2101 | H5: url | /cart.lp.click | spm | / | spma.b.c.d | 模块点击坑位 | 必埋 |
+| 去结算按钮 | 点击 | 2101 | H5: url | /cart.lp.click | spm | / | spma.b.c.d | 按钮点击坑位 | 必埋 |
 
 **埋点说明**：
-- spm-url/spm-pre 用于流量来源归因，格式为来源页面的spma.b.c.d
-- 商品相关埋点需包含：_p_prod(商品ID)、_p_sku(SKU ID)、trackInfo(推荐工程透传)
-- x_object_type区分自然商品(item)和广告商品(ad)
-- utLogMap用于服务端透传，需urlencode一次
+- 所有埋点字段必须全部小写
+- spm-url/spm-pre 用于流量来源归因
+- 商品相关埋点需包含：_p_prod(商品ID)、_p_sku(SKU ID)
+- 同一子模块下的不同按钮，在事件描述中区分（如"Boost it按钮点击"、"关闭按钮点击"）
 
 📱 原型图
 

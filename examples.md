@@ -52,27 +52,25 @@ flowchart TD
 | 4 | 结算 | 流程合并 | P0 | 将地址选择和支付方式选择合并为一步 | 结算步骤从4步减少到2步 |
 | 5 | 结算 | 步骤指示器 | P1 | 顶部显示清晰步骤进度（步骤1/2） | 指示器显示正确，当前步骤高亮 |
 
-📊 数据埋点（AIDC规范 v2.0 - 9项）
+📊 数据埋点
 
 | 埋点事件 | 事件类型 | page | arg1 | 触发时机 | 关键参数 | 优先级 |
 |---------|---------|------|------|---------|---------|--------|
-| 购物车页面 | 2001 | /cart.lp.exposure | spm-cnt | 进入购物车页 | spm-cnt=a211g0.cart, spm-url, spm-pre | 必需 |
-| 优惠券模块曝光 | 2201 | /cart.lp.exposure | page_cart_coupon_exp | 推荐卡片可见 | spm=a.b.c.d, _p_prod, _p_sku, trackInfo | 必需 |
-| 优惠券模块点击 | 2101 | /cart.lp.click | page_cart_coupon_clk | 点击推荐卡片 | spm, spm-url, spm-pre, coupon_id, result | 必需 |
+| 购物车页面 | 2001 | /cart.lp.exposure | spm-cnt | 进入购物车页 | spm-cnt, spm-url, spm-pre | 必需 |
+| 优惠券模块曝光 | 2201 | /cart.lp.exposure | page_cart_coupon_exp | 推荐卡片可见 | spm, _p_prod, _p_sku | 必需 |
+| 优惠券模块点击 | 2101 | /cart.lp.click | page_cart_coupon_clk | 点击推荐卡片 | spm, spm-url, spm-pre, coupon_id | 必需 |
 | 一键领券成功 | 2101 | /cart.lp.click | page_cart_claim_clk | 领券成功 | spm, _p_prod, coupon_id | 必需 |
 | 领券失败 | 2101 | /cart.lp.click | page_cart_claim_fail_clk | 领券失败 | spm, coupon_id, error_code | 建议 |
 | 失效商品清理 | 2101 | /cart.lp.click | page_cart_clear_clk | 点击清理按钮 | spm, clear_count | 建议 |
-| 去结算点击 | 2101 | /cart.lp.click | page_cart_checkout_clk | 点击结算按钮 | spm, spm-url, spm-pre, item_count, amount | 必需 |
-| 结算页面 | 2001 | /checkout.lp.exposure | spm-cnt | 进入结算页 | spm-cnt=a211g0.checkout, spm-url, spm-pre | 必需 |
-| 支付成功 | 2101 | /checkout.lp.click | page_checkout_pay_clk | 点击支付 | spm, order_id, amount | 必需 |
+| 去结算点击 | 2101 | /cart.lp.click | page_cart_checkout_clk | 点击结算按钮 | spm, spm-url, spm-pre, item_count | 必需 |
+| 结算页面 | 2001 | /checkout.lp.exposure | spm-cnt | 进入结算页 | spm-cnt, spm-url, spm-pre | 必需 |
+| 支付成功 | 2101 | /checkout.lp.click | page_checkout_pay_clk | 点击支付 | spm, order_id | 必需 |
 
 **埋点说明**：
 - **字段命名**：所有埋点字段必须全部小写
 - **page格式**：页面曝光使用 `/{lp}.lp.exposure`，点击使用 `/{lp}.lp.click`
 - **SPM三件套**：页面事件(2001)必埋 spm-cnt/spm-url/spm-pre；曝光/点击(2201/2101)必埋 spm
-- **商品卡必埋**：_p_prod(商品ID)、_p_sku(SKU ID)、trackInfo(推荐工程透传)、x_object_type、x_object_id
-- **utLogMap**：服务端透传字段，包含 position/is_fix_slot/is_wysiwyg/item_status/reco_reason，需urlencode
-- **广告流量**：需增加 utLogMap 参数，包含 adProduct/adSubProduct
+- **商品卡必埋**：_p_prod(商品ID)、_p_sku(SKU ID)
 
 📱 原型图
 

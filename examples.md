@@ -52,19 +52,24 @@ flowchart TD
 | 4 | 结算 | 流程合并 | P0 | 将地址选择和支付方式选择合并为一步 | 结算步骤从4步减少到2步 |
 | 5 | 结算 | 步骤指示器 | P1 | 顶部显示清晰步骤进度（步骤1/2） | 指示器显示正确，当前步骤高亮 |
 
-📊 数据埋点（9项）
+📊 数据埋点（AIDC规范-9项）
 
-| 埋点事件 | 事件ID | 触发时机 | 事件属性 | 优先级 |
-|---------|--------|---------|---------|--------|
-| 购物车页面曝光 | cart_view | 进入购物车页面 | page_name, source_page, item_count, total_amount | 必需 |
-| 优惠券推荐曝光 | coupon_recommend_show | 推荐卡片展示 | coupon_id, coupon_value, recommend_position | 必需 |
-| 优惠券推荐点击 | coupon_recommend_click | 点击推荐卡片 | coupon_id, click_result | 必需 |
-| 一键领券成功 | coupon_auto_claim | 自动领券成功 | coupon_id, source_type, claim_duration | 必需 |
-| 领券失败 | coupon_claim_fail | 领券失败 | coupon_id, error_code | 建议 |
-| 失效商品清理 | invalid_item_clear | 点击清理按钮 | clear_count, remain_count | 建议 |
-| 结算入口点击 | checkout_entry_click | 点击结算按钮 | item_count, total_amount, coupon_used | 必需 |
-| 结算页面曝光 | checkout_view | 进入结算页面 | page_name, step_count | 必需 |
-| 支付成功 | payment_success | 支付完成 | order_id, payment_amount, payment_time | 必需 |
+| 埋点事件 | 事件类型 | arg1(logkey) | 触发时机 | 关键参数 | 优先级 |
+|---------|---------|-------------|---------|---------|--------|
+| 购物车页面 | 2001 | page_cart | 进入购物车页 | spm-cnt=a211g0.cart, spm-url, spm-pre | 必需 |
+| 优惠券推荐曝光 | 2201 | page_cart_coupon_exp | 推荐卡片可见 | spm=a.b.c.d, _p_prod, _p_sku | 必需 |
+| 优惠券推荐点击 | 2101 | page_cart_coupon_clk | 点击推荐卡片 | spm, spm-url, spm-pre, coupon_id, result | 必需 |
+| 一键领券成功 | 2101 | page_cart_claim_clk | 领券成功点击 | spm, _p_prod, coupon_id | 必需 |
+| 领券失败 | 2101 | page_cart_claim_fail_clk | 领券失败 | spm, coupon_id, error_code | 建议 |
+| 失效商品清理 | 2101 | page_cart_clear_clk | 点击清理按钮 | spm, clear_count | 建议 |
+| 去结算点击 | 2101 | page_cart_checkout_clk | 点击结算按钮 | spm, spm-url, spm-pre, item_count, amount | 必需 |
+| 结算页面 | 2001 | page_checkout | 进入结算页 | spm-cnt=a211g0.checkout, spm-url, spm-pre | 必需 |
+| 支付成功 | 2101 | page_checkout_pay_clk | 点击支付成功 | spm, order_id, amount | 必需 |
+
+**说明**：
+- spm-url/spm-pre 用于流量来源归因，格式为来源页面的spma.b.c.d
+- 商品卡相关埋点需额外包含 _p_prod(商品ID), _p_sku(SKU ID)
+- 广告流量需增加 x_object_type=ad, utLogMap 参数
 
 📱 原型图
 
